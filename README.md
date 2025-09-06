@@ -8,6 +8,10 @@ Scrideo provides a simple, clean, and powerful solution. It offers two methods f
 1.  **YouTube URL:** Paste a link to a YouTube video.
 2.  **Local File Upload:** Upload your own audio or video file directly from your computer.
 
+<p align="center">
+  <img src="Scrideo page.png" width="500" >
+</p>
+
 ---
 
 ### Key Features
