@@ -1,0 +1,8 @@
+flask
+openai
+pytube
+python-dotenv
+flask-cors
+yt-dlp
+requests
+gunicorn

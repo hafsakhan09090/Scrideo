@@ -1,0 +1,155 @@
+<!--
+ Scrideo - AI Video Transcription
+ Hafsa, September 6 2025
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrideo - AI Video Transcription</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        body::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(circle at top left, rgba(192, 132, 252, 0.1), transparent 30%),
+                              radial-gradient(circle at bottom right, rgba(6, 182, 212, 0.1), transparent 30%);
+            background-repeat: no-repeat; background-attachment: fixed; z-index: -1; opacity: 0.8;
+        }
+        #result-container p { line-height: 1.7; color: #d1d5db; }
+        #file-upload { display: none; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4">
+    <main class="w-full max-w-2xl mx-auto">
+        <div class="bg-gray-800/50 backdrop-blur-md rounded-xl shadow-2xl shadow-purple-500/10 p-6 sm:p-8 border border-gray-700">
+            
+            <div class="text-center mb-8">
+                <h1 class="text-4xl sm:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-cyan-400 mb-2">
+                    Scrideo
+                </h1>
+                <p class="text-gray-400 text-md sm:text-lg">
+                    Generate a script from a YouTube video or your own media file.
+                </p>
+            </div>
+            
+            <form id="transcribe-form">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="url" id="youtube-url" placeholder="Paste a YouTube video link here..."
+                        class="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition duration-300 placeholder-gray-500">
+                    <button type="submit" id="submit-button"
+                        class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 rounded-lg font-semibold shadow-lg hover:shadow-purple-500/30 transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        <span>Generate</span>
+                    </button>
+                </div>
+
+                <div class="my-6 flex items-center">
+                    <div class="flex-grow border-t border-gray-700"></div>
+                    <span class="flex-shrink mx-4 text-gray-500">OR</span>
+                    <div class="flex-grow border-t border-gray-700"></div>
+                </div>
+
+                <div class="text-center">
+                    <input type="file" id="file-upload" accept="audio/*,video/*">
+                    <label for="file-upload" class="cursor-pointer inline-block w-full px-6 py-3 border-2 border-dashed border-gray-600 hover:border-cyan-500 text-gray-400 hover:text-cyan-400 rounded-lg transition-all duration-300">
+                        <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-4-4V7a4 4 0 014-4h5l2 2h5a4 4 0 014 4v2a4 4 0 01-4 4H7z"></path></svg>
+                        <span id="file-label-text">Click to upload a file</span>
+                    </label>
+                </div>
+            </form>
+
+            <div id="result-container" class="mt-8 p-6 bg-gray-900/60 border border-gray-700 rounded-lg min-h-[150px] transition-all duration-300">
+                <p id="placeholder-text" class="text-gray-500 text-center">Your video transcript will appear here...</p>
+            </div>
+        </div>
+        <footer class="text-center mt-8">
+            <p class="text-gray-600 text-sm">
+                @ 2025 Scrideo. 
+            </p>
+        </footer>
+    </main>
+
+    <script>
+        const transcribeForm = document.getElementById('transcribe-form');
+        const urlInput = document.getElementById('youtube-url');
+        const fileInput = document.getElementById('file-upload');
+        const fileLabelText = document.getElementById('file-label-text');
+        const submitButton = document.getElementById('submit-button');
+        const resultContainer = document.getElementById('result-container');
+
+        const loadingSpinner = `
+            <div class="flex flex-col items-center justify-center h-full text-gray-400">
+                <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="mt-4 text-center">Transcribing... This might take a minute for larger files.</p>
+            </div>
+        `;
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileLabelText.textContent = fileInput.files[0].name;
+                urlInput.value = ''; 
+            } else {
+                fileLabelText.textContent = 'Click to upload a file';
+            }
+        });
+
+        transcribeForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const youtubeURL = urlInput.value;
+            const uploadedFile = fileInput.files[0];
+
+            if (!youtubeURL && !uploadedFile) {
+                alert("Please provide a YouTube URL or upload a file.");
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+            resultContainer.innerHTML = loadingSpinner;
+
+            try {
+                let response;
+                if (uploadedFile) {
+                    const formData = new FormData();
+                    formData.append('file', uploadedFile);
+                    response = await fetch('/transcribe_file', {
+                        method: 'POST',
+                        body: formData,
+                    });
+                } else {
+                    response = await fetch('/transcribe', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: youtubeURL }),
+                    });
+                }
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Something went wrong on the server.');
+                }
+
+                const data = await response.json();
+                resultContainer.innerHTML = `<p>${data.transcript}</p>`;
+
+            } catch (error) {
+                resultContainer.innerHTML = `<div class="text-center"><p class="text-red-400 font-semibold">Error:</p><p class="text-red-400 mt-2">${error.message}</p></div>`;
+            } finally {
+                submitButton.disabled = false;
+                submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+    </script>
+</body>
+</html>
