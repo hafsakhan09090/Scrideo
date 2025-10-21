@@ -1,0 +1,10 @@
+flask==2.3.0
+flask-cors==4.0.0
+openai-whisper==20231117
+yt-dlp==2023.11.16
+psutil==5.9.5
+PyJWT==2.8.0
+gunicorn==21.2.0
+torch==1.13.1+cpu --index-url https://download.pytorch.org/whl/cpu
+numpy==1.24.3
+setuptools==65.5.0
