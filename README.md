@@ -1,4 +1,4 @@
-# 🎬 Scrideo – AI Video Captioning
+# 🎬 Scrideo – Subtitles, Simplified.
 
 ![Flask](https://img.shields.io/badge/Flask-2.3.3-blue?style=flat-square\&logo=flask)
 ![Whisper](https://img.shields.io/badge/Whisper-OpenAI-green?style=flat-square\&logo=openai)
